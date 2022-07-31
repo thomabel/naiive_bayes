@@ -5,7 +5,6 @@ Name: Thomas Abel
 Date: 2022-08-01
 Class: Machine Learning
 */
-mod constants;
 mod read;
 mod print_data;
 mod model;
@@ -44,50 +43,50 @@ fn main() {
     println!("Ending session.");
 }
 
-    // Splits the data into (train, test) sets.
-    fn split_data(input: &Array2<f32>) -> (Array2<f32>, Array2<f32>) {
-        let mut false_set = Vec::new();
-        let mut true_set = Vec::new();
+// Splits the data into (train, test) sets.
+fn split_data(input: &Array2<f32>) -> (Array2<f32>, Array2<f32>) {
+    let mut false_set = Vec::new();
+    let mut true_set = Vec::new();
 
-        // Parse each row as true or false and store indecies.
-        for i in 0..input.len_of(Axis(0)) {
-            if *input.row(i).last().unwrap() == 0. {
-                false_set.push(i);
-            }
-            else {
-                true_set.push(i);
-            }
+    // Parse each row as true or false and store indecies.
+    for i in 0..input.len_of(Axis(0)) {
+        if *input.row(i).last().unwrap() == 0. {
+            false_set.push(i);
         }
-
-        // Shuffle the sets.
-        let mut rng = rand::thread_rng();
-        false_set.shuffle(&mut rng);
-        true_set.shuffle(&mut rng);
-        
-        // Get lengths of each set.
-        let f_len = false_set.len();
-        let t_len = true_set.len();
-        
-        // Split sets in half.
-        let train = [&false_set[0..f_len/2], &true_set[0..t_len/2]].concat();
-        let test = [&false_set[f_len/2..f_len], &true_set[t_len/2..t_len]].concat();
-
-        // Copy data into new arrays.
-        let columns = input.len_of(Axis(1));
-        let mut rows = train.len();
-        let mut train_set = Array2::<f32>::zeros((rows, columns));
-        for i in 0..rows {
-            for j in 0..columns {
-                train_set[[i, j]] = input[[train[i], j]];
-            }
+        else {
+            true_set.push(i);
         }
-        rows = test.len();
-        let mut test_set = Array2::<f32>::zeros((rows, columns));
-        for i in 0..rows {
-            for j in 0..columns {
-                test_set[[i, j]] = input[[test[i], j]];
-            }
-        }
-
-        (train_set, test_set)
     }
+
+    // Shuffle the sets.
+    let mut rng = rand::thread_rng();
+    false_set.shuffle(&mut rng);
+    true_set.shuffle(&mut rng);
+    
+    // Get lengths of each set.
+    let f_len = false_set.len();
+    let t_len = true_set.len();
+    
+    // Split sets in half.
+    let train = [&false_set[0..f_len/2], &true_set[0..t_len/2]].concat();
+    let test = [&false_set[f_len/2..f_len], &true_set[t_len/2..t_len]].concat();
+
+    // Copy data into new arrays.
+    let columns = input.len_of(Axis(1));
+    let mut rows = train.len();
+    let mut train_set = Array2::<f32>::zeros((rows, columns));
+    for i in 0..rows {
+        for j in 0..columns {
+            train_set[[i, j]] = input[[train[i], j]];
+        }
+    }
+    rows = test.len();
+    let mut test_set = Array2::<f32>::zeros((rows, columns));
+    for i in 0..rows {
+        for j in 0..columns {
+            test_set[[i, j]] = input[[test[i], j]];
+        }
+    }
+
+    (train_set, test_set)
+}

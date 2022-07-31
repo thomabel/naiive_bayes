@@ -1,5 +1,4 @@
 use ndarray::prelude::*;
-use crate::constants::*;
 
 pub struct Bayes {
     pub true_ratio: f32,
@@ -52,22 +51,20 @@ impl Bayes {
     
     // Calculates the mean and standard deviation of the columns from input.
     fn mean_std_dev(input: &ArrayView2<f32>) -> Array1<(f32, f32)> {
+        // Uses a minimum value in case the standard deviation is equal to zero.
+        let minimum = 0.0001;
         let len = input.len_of(Axis(1));
         let mut output = Array1::<(f32, f32)>::from_elem(len, (0., 0.));
-    
+
         for i in 0..len {
+            // For each column in the set, find the mean and standard deviation.
             let column = input.column(i);
             let mean = column.mean().unwrap();
             let c = column.std(0.);
-            let std = 
-            if c == 0. { 
-                MIN_STD 
-            }
-            else {
-                c
-            };
-            //println!("{}, {}", mean, std);
+            let std = if c == 0. { minimum } else { c };
             output[i] = (mean, std);
+
+            //println!("{}, {}", mean, std);
         }
     
         output
@@ -80,12 +77,18 @@ impl Bayes {
         let mut confusion = Array2::<u32>::zeros((2, 2));
 
         for i in input.rows() {
+            // Calculate probabilities for each class.
             let true_prob = Bayes::class_prob(&i, &self.true_mean_std, self.true_ratio);
             let false_prob = Bayes::class_prob(&i, &self.false_mean_std, self.false_ratio);
+            
+            // Find true class and guess.
             let class = *i.last().unwrap() as usize;
-            let guess: usize = if true_prob > false_prob { 0 } else { 1 };
-            //println!("{}, {} // {}, {}", true_prob, false_prob, class, guess);
+            let guess: usize = if true_prob > false_prob { 1 } else { 0 };
+            
+            // Add into the confusion matrix.
             confusion[[class, guess]] += 1;
+            
+            println!("{:>12.6}, {:>12.6} // {}, {}", true_prob, false_prob, class, guess);
         }
 
         confusion
@@ -93,7 +96,7 @@ impl Bayes {
 
     // The classifier function.
     fn n(x: f32, m: f32, s: f32) -> f32 {
-        1. / (f32::sqrt(TWO_PI) * s) * 
+        1. / (f32::sqrt(2. * std::f32::consts::PI) * s) * 
         f32::exp(-((x - m) * (x - m) / (2. * s * s)))
     }
     
@@ -104,12 +107,11 @@ impl Bayes {
         for i in 0..input.len() - 1 {
             let n = f32::ln(Bayes::n(input[i], mean_std[i].0, mean_std[i].1));
             prob += n;
-            print!("{}, ", n);
+            //print!("{}, ", n);
         }
-        println!{"\n"};
+        //println!{"\n"};
     
         prob
     }
-
 
 }
