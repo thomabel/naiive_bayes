@@ -1,1 +1,0 @@
-pub const INPUT: usize = 0;
