@@ -2,8 +2,8 @@ use ndarray::prelude::*;
 use crate::constants::*;
 
 pub struct Bayes {
-    pub true_ratio: f64,
-    pub false_ratio: f64,
+    pub true_ratio: f32,
+    pub false_ratio: f32,
     pub true_mean_std: Array1<(f32, f32)>,
     pub false_mean_std: Array1<(f32, f32)>,
 }
@@ -20,17 +20,19 @@ impl Bayes {
         for i in 0..input_len {
             if *input.row(i).last().unwrap() == 1. {
                 index = i;
+                break;
             }
         }
-            
+        println!("train: {}, {}, {}", input_len, input_true, index);
+
         // Slice the training set into true and false slices.
         let false_view = input.slice(s![0..index, ..]);
         let true_view = input.slice(s![index..input_len, ..]);
             
         // Calculate all necessary values for classification and return.
         Bayes {
-            true_ratio: input_true as f64 / input_len as f64,
-            false_ratio: (input_len - input_true) as f64 / input_len as f64,
+            true_ratio: input_true as f32 / input_len as f32,
+            false_ratio: (input_len - input_true) as f32 / input_len as f32,
             true_mean_std: Bayes::mean_std_dev(&true_view),
             false_mean_std: Bayes::mean_std_dev(&false_view),
         }
@@ -39,18 +41,10 @@ impl Bayes {
     // Counts the number of true or false entries.
     fn count(input: &Array2<f32>, check: bool) -> usize {
         let mut count = 0;
-        if check {
-            for i in input.rows() {
-                if *i.last().unwrap() == 1. {
-                    count += 1;
-                }
-            }
-        }
-        else {
-            for i in input.rows() {
-                if *i.last().unwrap() == 0. {
-                    count += 1;
-                }
+        let value = if check { 1.} else { 0. };
+        for i in input.rows() {
+            if *i.last().unwrap() == value {
+                count += 1;
             }
         }
         count
@@ -72,7 +66,7 @@ impl Bayes {
             else {
                 c
             };
-            
+            //println!("{}, {}", mean, std);
             output[i] = (mean, std);
         }
     
@@ -90,6 +84,7 @@ impl Bayes {
             let false_prob = Bayes::class_prob(&i, &self.false_mean_std, self.false_ratio);
             let class = *i.last().unwrap() as usize;
             let guess: usize = if true_prob > false_prob { 0 } else { 1 };
+            //println!("{}, {} // {}, {}", true_prob, false_prob, class, guess);
             confusion[[class, guess]] += 1;
         }
 
@@ -97,17 +92,21 @@ impl Bayes {
     }
 
     // The classifier function.
-    fn N(x: f32, m: f32, s: f32) -> f32 {
-        1. / (f32::sqrt(TWO_PI) * s) * f32::exp(-((x - m) * (x - m) / (2. * s * s) ))
+    fn n(x: f32, m: f32, s: f32) -> f32 {
+        1. / (f32::sqrt(TWO_PI) * s) * 
+        f32::exp(-((x - m) * (x - m) / (2. * s * s)))
     }
     
     // Determines the probability of a specific class.
-    fn class_prob(input: &ArrayView1<f32>, mean_std: &Array1<(f32, f32)>, p_class: f64) -> f64 {
-        let mut prob = f64::ln(p_class);
+    fn class_prob(input: &ArrayView1<f32>, mean_std: &Array1<(f32, f32)>, p_class: f32) -> f32 {
+        let mut prob = f32::ln(p_class);
     
-        for i in 0..input.len() {
-            prob += f64::ln(Bayes::N(input[i], mean_std[i].0, mean_std[i].1) as f64);
+        for i in 0..input.len() - 1 {
+            let n = f32::ln(Bayes::n(input[i], mean_std[i].0, mean_std[i].1));
+            prob += n;
+            print!("{}, ", n);
         }
+        println!{"\n"};
     
         prob
     }

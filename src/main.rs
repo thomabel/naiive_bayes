@@ -39,8 +39,8 @@ fn main() {
 
     let model = model::Bayes::train(&train);
     let confusion = model.test(&test);
+    
     _print_matrix(&confusion.view(), "CONFUSION");
-
     println!("Ending session.");
 }
 
@@ -63,7 +63,7 @@ fn main() {
         let mut rng = rand::thread_rng();
         false_set.shuffle(&mut rng);
         true_set.shuffle(&mut rng);
-
+        
         // Get lengths of each set.
         let f_len = false_set.len();
         let t_len = true_set.len();
