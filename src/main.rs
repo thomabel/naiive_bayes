@@ -24,7 +24,7 @@ fn main() {
     let input;
     match result {
         Ok(o) => {
-            println!("SUCCESS: Data read");
+            println!("SUCCESS: Data read \n");
             input = o;
         },
         Err(e) => {
@@ -38,8 +38,8 @@ fn main() {
 
     let model = model::Bayes::train(&train);
     let confusion = model.test(&test);
-    
-    _print_matrix(&confusion.view(), "CONFUSION");
+    print_confusion(&confusion);
+
     println!("Ending session.");
 }
 
@@ -89,4 +89,22 @@ fn split_data(input: &Array2<f32>) -> (Array2<f32>, Array2<f32>) {
     }
 
     (train_set, test_set)
+}
+
+// Confusion matrix functions
+fn accuracy(confusion: &Array2<u32>) -> f32 {
+    (confusion[[0, 0]] + confusion[[1, 1]]) as f32 / confusion.sum() as f32
+}
+fn precision(confusion: &Array2<u32>) -> f32 {
+    confusion[[1, 1]] as f32 / (confusion[[0, 0]] + confusion[[1, 1]]) as f32
+}
+fn recall(confusion: &Array2<u32>) -> f32 {
+    confusion[[1, 1]] as f32 / (confusion[[1, 1]] + confusion[[1, 0]]) as f32
+}
+fn print_confusion(confusion: &Array2<u32>) {
+    _print_matrix(&confusion.view(), "CONFUSION");
+    println!("Accuracy:  {:<12.6}", accuracy(confusion));
+    println!("Precision: {:<12.6}", precision(confusion));
+    println!("Recall:    {:<12.6}", recall(confusion));
+    println!();
 }

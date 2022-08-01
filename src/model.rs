@@ -22,7 +22,7 @@ impl Bayes {
                 break;
             }
         }
-        println!("train: {}, {}, {}", input_len, input_true, index);
+        //println!("train: {}, {}, {}", input_len, input_true, index);
 
         // Slice the training set into true and false slices.
         let false_view = input.slice(s![0..index, ..]);
@@ -88,7 +88,7 @@ impl Bayes {
             // Add into the confusion matrix.
             confusion[[class, guess]] += 1;
             
-            println!("{:>12.6}, {:>12.6} // {}, {}", true_prob, false_prob, class, guess);
+            //println!("{:>12.6}, {:>12.6} // {}, {}", true_prob, false_prob, class, guess);
         }
 
         confusion
