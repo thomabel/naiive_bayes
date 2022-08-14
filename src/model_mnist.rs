@@ -1,4 +1,4 @@
-use crate::utility::print_data;
+//use crate::utility::print_data;
 use crate::{Vector, Matrix, Target, Confusion};
 use crate::{Input, MeanStd2};
 use ndarray::prelude::*;
@@ -9,11 +9,10 @@ pub struct Bayes {
 }
 impl Bayes {
     pub fn train(input: &Input, classes: &[&str]) -> Bayes {
-        // Split the data by making an index array for each class.
+        // The input is sorted by class.
+        // Create in array that stores the index of the start of each class.
         let class_len = classes.len();
         let class_index = Bayes::class_index(&input.1, classes);
-
-        //_print_vector(&class_index.view(), "CLASS index");
 
         // Calculate the probability of a class given by: number of class / total number of inputs.
         let total = input.1.len_of(Axis(0)) as f32;
@@ -27,11 +26,8 @@ impl Bayes {
                 }
             );
 
-        //_print_vector(&class_prob.view(), "CLASS PROB");
-
         // Calculate the means and standard deviations for each class and each input in that class.
         let mean_stddev = Bayes::mean_std(&input.0, &class_index);
-        //_print_matrix(&mean_stddev.view(), "MEAN STDDEV");
 
         Bayes { class_prob, mean_stddev }
     }
@@ -43,15 +39,12 @@ impl Bayes {
         let mut current_class = classes[index];
 
         for (i, class) in input.iter().enumerate() {
-            //print!("{}, ", class);
             if class != current_class {
                 lens[index] = i;
                 index += 1;
                 current_class = classes[index];
-                println!();
             }
         }
-        //println!();
         // Assign last index to end of list.
         *lens.last_mut().unwrap() = input.len();
         lens
@@ -83,12 +76,8 @@ impl Bayes {
                     std = min;
                 }
                 mean_std[[class, entry]] = (mean, std);
-
-                print!("({}, {}), ", mean, std);
             }
-            println!();
         }
-
         mean_std
     }
 
@@ -128,6 +117,22 @@ impl Bayes {
         confusion
     }
 
+    // Get the probability of an input for a single class.
+    fn class_probability(input: &ArrayView1<f32>, mean_std: &ArrayView1<(f32, f32)>, class_prob: f32) -> f32 {
+        let mut prob = f32::ln(class_prob);
+        for i in 0..input.len() - 1 {
+            let n = f32::ln(Bayes::classify(input[i], mean_std[i].0, mean_std[i].1));
+            prob += n;
+        }
+        prob
+    }
+
+    // The classifier function.
+    fn classify(x: f32, m: f32, s: f32) -> f32 {
+        1. / (f32::sqrt(2. * std::f32::consts::PI) * s) * 
+        f32::exp(-((x - m) * (x - m) / (2. * s * s)))
+    }
+
     // Determine which probability was the highest.
     fn highest_prob(prob: &Vector) -> usize {
         let mut predict = 0;
@@ -147,26 +152,6 @@ impl Bayes {
             }
         }
         Err("Class does not exist.".to_string())
-    }
-
-    // Get the probability of an input for a single class.
-    fn class_probability(input: &ArrayView1<f32>, mean_std: &ArrayView1<(f32, f32)>, class_prob: f32) -> f32 {
-        let mut prob = f32::ln(class_prob);
-
-        for i in 0..input.len() - 1 {
-            let n = f32::ln(Bayes::classify(input[i], mean_std[i].0, mean_std[i].1));
-            prob += n;
-            //print!("{}, ", n);
-        }
-        //println!{"\n"};
-
-        prob
-    }
-
-    // The classifier function.
-    fn classify(x: f32, m: f32, s: f32) -> f32 {
-        1. / (f32::sqrt(2. * std::f32::consts::PI) * s) * 
-        f32::exp(-((x - m) * (x - m) / (2. * s * s)))
     }
 
 }

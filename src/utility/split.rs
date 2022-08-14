@@ -51,6 +51,7 @@ pub fn _split_data(input: &Array2<f32>) -> (Array2<f32>, Array2<f32>) {
     (train_set, test_set)
 }
 
+// Organize the array by class using an index array and then randomize those arrays.
 pub fn split_multiclass(input: &Target, classes: usize) -> Array1<Vec<usize>> {
     let mut arr = Array1::<Vec<usize>>::from_elem(classes, Vec::new());
 
@@ -66,24 +67,36 @@ pub fn split_multiclass(input: &Target, classes: usize) -> Array1<Vec<usize>> {
         
     }
 
+    // Randomize the vectors.
+    let mut rng = rand::thread_rng();
+    for vec in arr.iter_mut() {
+        vec.shuffle(&mut rng);
+    }
+
     arr
 }
 
-pub fn split_multiclass_input(input: Input, classes: usize) -> Input {
+// Converts an input array into a class-sorted array.
+pub fn split_multiclass_input(input: &Input, classes: usize, fraction: f32) -> Input {
     let arr = split_multiclass(&input.1, classes);
 
     let mut data = Vec::new();
     let mut target = Vec::new();
+    let mut rows = 0;
 
     for class in arr {
-        for index in class {
-            target.push(input.1[index].to_owned());
-            for i in input.0.row(index) {
+        let class_len = (class.len() as f32 * fraction) as usize;
+        for index in class.iter().take(class_len) {
+            target.push(input.1[*index].to_owned());
+            for i in input.0.row(*index) {
                 data.push(*i);
             }
+            rows += 1;
         }
     }
 
-    (Array2::<f32>::from_shape_vec(input.0.raw_dim(), data).unwrap(), 
-     Array1::<String>::from_shape_vec(input.1.raw_dim(), target).unwrap())
+    let columns = input.0.len_of(Axis(1));
+
+    (Array2::<f32>::from_shape_vec((rows, columns), data).unwrap(), 
+     Array1::<String>::from_shape_vec(rows, target).unwrap())
 }

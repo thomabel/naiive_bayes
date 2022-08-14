@@ -1,5 +1,7 @@
 use ndarray::prelude::*;
-use crate::{Matrix, Confusion, MeanStd};
+use crate::{Matrix, Confusion};
+
+type MeanStd = Array1<(f32, f32)>;
 
 pub struct Bayes {
     pub true_ratio: f32,
