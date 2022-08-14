@@ -14,7 +14,7 @@ pub fn _print_matrix<T: std::fmt::Debug>(input: &ArrayView2<T>, name: &str) {
     println!("{}:", name);
     for row in input.rows() {
         for col in row {
-            print!("{:02?}, ", col);
+            print!("{:>3?}, ", col);
         }
         println!();
     }
@@ -24,7 +24,7 @@ pub fn _print_matrix<T: std::fmt::Debug>(input: &ArrayView2<T>, name: &str) {
 pub fn _print_vector<T: std::fmt::Debug>(input: &ArrayView1<T>, name: &str) {
     println!("{}:", name);
     for i in input {
-        print!("{:.0?}, ", i);
+        print!("{:.3?}, ", i);
     }
     println!();
 }
